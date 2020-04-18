@@ -35,7 +35,7 @@
               <label for="currency" class="col-sm-2 col-form-label">Currency</label>
               <div class="col-sm-10">
                 <!-- build a searchable select here, and preferably country flags. should also save last input. try vue-multiselect this time... -->
-                <select class="custom-select" id="currency" v-model="addTransaction.currency" @change="convert(); saveCurrency()">
+                <select class="custom-select" id="currency" v-model="addTransaction.currency" @change="convert('budget'); saveCurrency()">
                   <option v-for="currency in currencies" v-bind:value="currency.id">
                     {{ currency.currencyName }}
                   </option>
@@ -51,11 +51,11 @@
                   <div class="input-group-prepend">
                     <span class="input-group-text">{{ addTransaction.currency }}</span>
                   </div>
-                  <input type="number" min="0.00" class="form-control" v-model="addTransaction.amountUserCurrency" @change="convert()">
+                  <input type="number" min="0.00" class="form-control" v-model="addTransaction.amountUserCurrency" @change="convert('budget');">
                   <div class="input-group-prepend">
                     <span class="input-group-text">≈ {{ budgetCurrency }}</span>
                   </div>
-                  <input type="number" min="0.00" class="form-control" v-model="addTransaction.amountBudgetCurrency" >
+                  <input type="number" min="0.00" class="form-control" v-model="addTransaction.amountBudgetCurrency" @change="convert('user');">
                 </div>
               </div>
             </div>
@@ -161,6 +161,9 @@ const axios = require('axios');
 // register globally
 Vue.component('multiselect', Multiselect)
 
+// HOW TO WORK AROUND API LIMITATIONS: USE AN API THAT HAS ALL THE RATES AND RATE LIMIT PER MONTH
+// FETCH IT ONCE A DAY, STORE TO DB (WILL NEED BACK END FOR THAT. OR PYTHON AND JUST PUT IT IN JSON FILE)
+  
 export default {
   // The data to feed our templates
   data () {
@@ -175,37 +178,46 @@ export default {
       error: null,
       budgetId: null,
       budgets: [],
+      budget: null,
       transactions: [],
       payees: [],
       accounts: [],
       categoryGroups: [],
       addTransaction: {
         currency: sessionStorage.getItem('currency'),
-        budget: sessionStorage.getItem('budget'),
+        budget: null, // set in created() so that watch triggers
         account: sessionStorage.getItem('account'),
         amountUserCurrency: 0,
         amountBudgetCurrency: 0,
         date: new Date().toISOString().slice(0,10)
       },
       currencies: currencies,
-      budgetCurrency: "USD"
+      budgetCurrency: null
     }
   },
   // When this component is created, check whether we need to get a token,
   // budgets or display the transactions
-  created() {
+  created: async function() {
     this.ynab.token = this.findYNABToken();
     if (this.ynab.token) {
       this.api = new ynab.api(this.ynab.token);
-      this.getBudgets();
+      this.addTransaction.budget = sessionStorage.getItem('budget') || this.setDefaultBudget();
+    }
+  },
+  watch: {
+    'addTransaction.budget': function (val) {
+      this.setCurrentBudget(); // loads all budgets, sets the currency
       this.getCategories();
       this.getPayees();
       this.getAccounts();
+    },
+    'budgetCurrency': function (val) {
+      fx.base = this.budgetCurrency;
+      fx.rates = {
+        [fx.base] : 1, // always include the base rate (1:1)
+      };
+      this.convert('budget');
     }
-    fx.base = this.budgetCurrency;
-    fx.rates = {
-      [fx.base] : 1, // always include the base rate (1:1)
-    };
   },
   methods: {
     submitTransaction: function() {
@@ -215,7 +227,7 @@ export default {
     getRate(curr) {
       let budgetCurrency = this.budgetCurrency;
       return new Promise(function (resolve, reject) {
-        if(fx.rates.hasOwnProperty(curr)) resolve();
+        if(fx.rates.hasOwnProperty(curr) && fx.rates.hasOwnProperty(budgetCurrency)) resolve();
         axios.get('https://free.currconv.com/api/v7/convert?apiKey='+config.currencyApiKey+'&q='+budgetCurrency+'_'+curr+'&compact=ultra')
         .then(response => {
           fx.rates[curr] = response.data[Object.keys(response.data)[0]];
@@ -226,12 +238,19 @@ export default {
         })
       });
     },
-    convert() {
-      this.getRate(this.addTransaction.currency)
+    convert(target) {
+      this.getRate(this.addTransaction.currency) // we always have the budget currency.. 1:1 lol
       .then(response => {
         console.log(fx.rates);
-        let converted = fx.convert(this.addTransaction.amountUserCurrency, {from: this.addTransaction.currency, to: this.budgetCurrency});
-        this.addTransaction.amountBudgetCurrency = converted.toFixed(2);
+        
+        let amount = (target == "budget") ? this.addTransaction.amountUserCurrency : this.addTransaction.amountBudgetCurrency;
+        let from = (target == "budget") ? this.addTransaction.currency : this.budgetCurrency;
+        let to = (target == "budget") ? this.budgetCurrency : this.addTransaction.currency;
+        
+        let converted = fx.convert(amount, {from: from, to: to}).toFixed(2);
+        
+        if(target == "budget") this.addTransaction.amountBudgetCurrency = converted;
+        else if(target == "user") this.addTransaction.amountUserCurrency = converted;
       })
     },
     saveCurrency() {
@@ -245,15 +264,38 @@ export default {
     },
     // This uses the YNAB API to get a list of budgets
     getBudgets() {
+      let api = this.api;
+      return new Promise(function (resolve, reject) {
+        api.budgets.getBudgets().then((res) => {
+          resolve(res.data.budgets);
+        }).catch((err) => {
+          reject(err);
+        });
+      });
+    },
+    setDefaultBudget() {
       this.loading = true;
       this.error = null;
-      this.api.budgets.getBudgets().then((res) => {
-        this.budgets = res.data.budgets;
+      this.api.budgets.getBudgetById("default").then((res) => {
+        this.addTransaction.budget = res.data.budget.id;
       }).catch((err) => {
         this.error = err.error.detail;
       }).finally(() => {
         this.loading = false;
       });
+    },
+    setCurrentBudget: async function() {
+      if(!this.budgets.length) {
+        var budgets = await this.getBudgets();
+        this.budgets = budgets;
+      } else var budgets = this.budgets;
+      let currentBudgetId = this.addTransaction.budget;
+      let currentBudget = [];
+      budgets.forEach(function(budget) {
+        if(budget.id == currentBudgetId) currentBudget = budget;
+      });
+      this.budget = currentBudget;
+      this.budgetCurrency = this.budget.currency_format.iso_code;
     },
     getCategories() {
       this.loading = true;
