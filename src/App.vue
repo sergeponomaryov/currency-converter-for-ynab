@@ -34,26 +34,24 @@
             <div class="form-group row">
               <label for="currency" class="col-sm-2 col-form-label">Currency</label>
               <div class="col-sm-10">
-                <!-- build a searchable select here, and preferably country flags. should also save last input. try vue-multiselect this time... -->
                 <select class="custom-select" id="currency" v-model="addTransaction.currency" @change="convert('budget'); saveCurrency()">
-                  <option v-for="currency in currencies" v-bind:value="currency.id">
-                    {{ currency.currencyName }}
+                  <option v-for="(currency, code) in currencies" v-bind:value="code">
+                    {{ currency }}
                   </option>
                 </select>
               </div>
             </div>
               
-            <!-- Put flags here instead -->
             <div class="form-group row">
               <label for="amount" class="col-sm-2 col-form-label">Amount</label>
               <div class="col-sm-10">
                 <div class="input-group">
                   <div class="input-group-prepend">
-                    <span class="input-group-text">{{ addTransaction.currency }}</span>
+                    <span class="input-group-text"><span :class="userFlag"></span>{{ addTransaction.currency }}</span>
                   </div>
                   <input type="number" min="0.00" class="form-control" v-model="addTransaction.amountUserCurrency" @change="convert('budget');">
                   <div class="input-group-prepend">
-                    <span class="input-group-text">≈ {{ budgetCurrency }}</span>
+                    <span class="input-group-text"><span :class="budgetFlag"></span>{{ budgetCurrency }}</span>
                   </div>
                   <input type="number" min="0.00" class="form-control" v-model="addTransaction.amountBudgetCurrency" @change="convert('user');">
                 </div>
@@ -109,7 +107,7 @@
             <div class="form-group row">
               <label for="category" class="col-sm-2 col-form-label">Date</label>
               <div class="col-sm-10">
-                <input type="date" class="form-control" id="date" v-model="addTransaction.date">
+                <input type="date" class="custom-select" id="date" v-model="addTransaction.date">
               </div>
             </div>
               
@@ -143,7 +141,7 @@ import * as ynab from 'ynab';
 
 // Import our config for YNAB
 import config from './config.json';
-import currencies from './currencies2.json';
+import currencies from './currencies.json';
 
 // Import Our Components to Compose Our App
 import Nav from './components/Nav.vue';
@@ -160,9 +158,6 @@ const axios = require('axios');
 
 // register globally
 Vue.component('multiselect', Multiselect)
-
-// HOW TO WORK AROUND API LIMITATIONS: USE AN API THAT HAS ALL THE RATES AND RATE LIMIT PER MONTH
-// FETCH IT ONCE A DAY, STORE TO DB (WILL NEED BACK END FOR THAT. OR PYTHON AND JUST PUT IT IN JSON FILE)
   
 export default {
   // The data to feed our templates
@@ -193,6 +188,24 @@ export default {
       },
       currencies: currencies,
       budgetCurrency: null
+      // @todo
+      // set default user currency to budget currency
+      // add plus/minus
+      // 0 and 0.00
+      // searchable select
+      // submit ofc
+      // loaders
+      // endless token
+      // too many req's why? Maybe dont show this stuff and reload?
+      // make sure disk cache on this doesn't last more than a day
+      // rewrite this india
+      // theme/design fixes
+      // remove weird ass currencies
+      // python cronjob, make sure permissions are ok, set up error logging to file
+      // more fields memo etc
+      // log out
+      // remove obsolete packages from npm/calls to them (selects etc)
+      // look into reliance on glitch cdn/css files
     }
   },
   // When this component is created, check whether we need to get a token,
@@ -202,7 +215,9 @@ export default {
     if (this.ynab.token) {
       this.api = new ynab.api(this.ynab.token);
       this.addTransaction.budget = sessionStorage.getItem('budget') || this.setDefaultBudget();
+      this.getRates();
     }
+    fx.base = "USD";
   },
   watch: {
     'addTransaction.budget': function (val) {
@@ -212,11 +227,17 @@ export default {
       this.getAccounts();
     },
     'budgetCurrency': function (val) {
-      fx.base = this.budgetCurrency;
-      fx.rates = {
-        [fx.base] : 1, // always include the base rate (1:1)
-      };
       this.convert('budget');
+    }
+  },
+  computed: {
+    'budgetFlag': function() {
+      let val = (this.budgetCurrency) ? "flag-"+this.budgetCurrency.slice(0, 2).toLowerCase() : null;
+      return val;
+    },
+    'userFlag': function() {
+      let val = (this.addTransaction.currency) ? "flag-"+this.addTransaction.currency.slice(0, 2).toLowerCase() : null;
+      return val;
     }
   },
   methods: {
@@ -224,25 +245,25 @@ export default {
       console.log(this.addTransaction.amount);
       this.amount = '';
     },
-    getRate(curr) {
-      let budgetCurrency = this.budgetCurrency;
+    getRates() {
+      // make sure disk cache on this doesn't last more than a day
       return new Promise(function (resolve, reject) {
-        if(fx.rates.hasOwnProperty(curr) && fx.rates.hasOwnProperty(budgetCurrency)) resolve();
-        axios.get('https://free.currconv.com/api/v7/convert?apiKey='+config.currencyApiKey+'&q='+budgetCurrency+'_'+curr+'&compact=ultra')
+        if(Object.keys(fx.rates).length) {
+          resolve();
+          return true;
+        }
+        axios.get(config.ratesUrl)
         .then(response => {
-          fx.rates[curr] = response.data[Object.keys(response.data)[0]];
+          fx.rates = response.data.rates;
           resolve();
         }).catch(err => {
           reject(err);
-          //this.error = err.error.detail;
         })
       });
     },
     convert(target) {
-      this.getRate(this.addTransaction.currency) // we always have the budget currency.. 1:1 lol
+      this.getRates()
       .then(response => {
-        console.log(fx.rates);
-        
         let amount = (target == "budget") ? this.addTransaction.amountUserCurrency : this.addTransaction.amountBudgetCurrency;
         let from = (target == "budget") ? this.addTransaction.currency : this.budgetCurrency;
         let to = (target == "budget") ? this.budgetCurrency : this.addTransaction.currency;
@@ -285,6 +306,8 @@ export default {
       });
     },
     setCurrentBudget: async function() {
+      // rewrite this india, resolve if we have it like the other functions
+      // you forgot about how you wrote it yourself previously lol
       if(!this.budgets.length) {
         var budgets = await this.getBudgets();
         this.budgets = budgets;
