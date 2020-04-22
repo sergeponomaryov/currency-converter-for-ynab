@@ -46,13 +46,13 @@
                   <div class="input-group-prepend">
                     <span class="input-group-text currency-prepend"><span :class="userFlag"></span>{{ userCurrency }}</span>
                   </div>
-                  <input type="number" min="0.00" step="0.01" class="form-control" v-model="amountUserCurrency" @change="convert('budget');" v-on:keydown.enter.prevent="convert('budget');" >
+                  <input type="number" min="0.00" step="0.01" class="form-control" v-model="amountUserCurrency" @input="convert('budget');" v-on:keydown.enter.prevent="convert('budget');" >
                 </div>
                 <div class="input-group">
                   <div class="input-group-prepend">
                     <span class="input-group-text currency-prepend"><span :class="budgetFlag"></span>{{ budgetCurrency }}</span>
                   </div>
-                  <input type="number" min="0.01" step="0.01" class="form-control" v-model="amountBudgetCurrency" @change="convert('user');" v-on:keydown.enter.prevent="convert('budget');">
+                  <input type="number" min="0.01" step="0.01" class="form-control" v-model="amountBudgetCurrency" @input="convert('user');" v-on:keydown.enter.prevent="convert('budget');">
                 </div>
               </div>
             </div>
@@ -67,7 +67,7 @@
             <div class="form-group row">
               <label for="budget" class="col-3 col-sm-2 col-form-label">Budget</label>
               <div class="col-9 col-sm-10">
-                <model-list-select :list="budgets" v-model="budgetId" option-value="id" option-text="name" class="custom-select" @change="getCategories(); getPayees(); getAccounts(); saveBudget()"></model-list-select>
+                <model-list-select :list="budgets" v-model="budgetId" option-value="id" option-text="name" class="custom-select"></model-list-select>
               </div>
             </div>
               
@@ -88,7 +88,7 @@
             <div class="form-group row">
               <label for="account" class="col-3 col-sm-2 col-form-label">Account</label>
               <div class="col-9 col-sm-10">
-                <model-list-select :list="accounts" v-model="account" option-value="id" option-text="name" class="custom-select" @change="saveAccount()"></model-list-select>
+                <model-list-select :list="accounts" v-model="account" option-value="id" option-text="name" class="custom-select"></model-list-select>
               </div>
             </div>
               
@@ -108,7 +108,7 @@
               
             <div class="form-group row">
               <div class="col-form-label col-3 col-sm-2 custom-control custom-switch" id="cleared-switch">
-                <input type="checkbox" class="custom-control-input" id="cleared" @change="saveCleared()" v-model="cleared" true-value="cleared" false-value="uncleared">
+                <input type="checkbox" class="custom-control-input" id="cleared" v-model="cleared" true-value="cleared" false-value="uncleared">
                 <label class="custom-control-label" for="cleared">Cleared</label>
               </div>
               <div class="col-9 col-sm-10">
@@ -205,19 +205,15 @@ export default {
       date: new Date().toISOString().slice(0,10)
       
       // @todo
-      // update conversion upon typing
-      // account/budget not set to correct value with new select
-      // 6 requests go out when changing budget.. Still happens
-      // console errors on first login / error when no currency selected
-      // test in safari and firefox
       // google analytics
       // privacy policy (show inline?), fx risk warning, contact
       // python cronjob, make sure permissions are ok, set up error logging to file, make sure THAT json is used
       // make sure disk cache on this (rates) doesn't last more than a day: cache control. Currently 365 days. Fix! (Altho put it on a domain first and check what its like from there, this is a cdn!!!)
+      // code reset doesnt work in ff.. also input highlighted in red
+      // usd gets 0'd when user currency is first selected
       
       // @launch
-      // set to production mode
-      // deploy! (front to netlify, back to aws)
+      // deploy! (front to netlify, back to aws. Redirect url? Netlify i believe.)
       // get domain
       // use it yourself for a while to add txs
       // get approved by ynab
@@ -237,6 +233,7 @@ export default {
     }
     fx.base = "USD";
     this.amountUserCurrency = this.amountUserCurrency.toFixed(2);
+    this.amountBudgetCurrency = this.amountBudgetCurrency.toFixed(2);
   },
   watch: {
     'budgetId': async function (val) {
@@ -247,12 +244,20 @@ export default {
           this.cache("budgets", this.budgets);
           this.loading = false;
         }
-      }
-      this.setBudgetCurrency(this.budgets);
+        var budgets = this.budgets;
+      } else var budgets = this.budgets;
+      this.setBudgetCurrency(budgets);
       
       this.getCategories();
       this.getPayees();
       this.getAccounts();
+      this.saveBudget();
+    },
+    'account': function(val) {
+      this.saveAccount();
+    },
+    'cleared': function(val) {
+      this.saveCleared();
     },
     'budgetCurrency': function (val) {
       this.convert('budget');
@@ -310,6 +315,7 @@ export default {
       });
     },
     convert(target) {
+      if(!this.userCurrency) return true;
       this.getRates()
       .then(response => {
         let amount = (target == "budget") ? this.amountUserCurrency : this.amountBudgetCurrency;
@@ -386,7 +392,7 @@ export default {
         });
         this.categories = categories;
         this.cache("categories-"+this.budgetId, this.categories);
-        console.log(JSON.stringify(this.categories));
+        //console.log(JSON.stringify(this.categories));
       }).catch((err) => {
         this.error = err.error.detail;
       })
