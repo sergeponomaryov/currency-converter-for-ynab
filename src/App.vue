@@ -3,9 +3,6 @@
     <Nav />
     <div class="container">
 
-      <!-- Display a loading message if loading 
-      <h1 v-if="loading" class="display-4">Loading...</h1>-->
-
       <!-- Display an error if we got one -->
       <div v-if="error">
         <h1 class="display-4">Oops!</h1>
@@ -16,8 +13,13 @@
       <!-- Otherwise show our app contents -->
       <div v-else>
 
+        <!-- Display a spinner if loading -->
+        <div class="spinner-border" role="status" v-if="loading">
+          <span class="sr-only">Loading...</span>
+        </div>
+        
         <!-- If we dont have a token ask the user to authorize with YNAB -->
-        <form v-if="!ynab.token">
+        <form v-else-if="!ynab.token">
           <div class="form-group">
             <p class="lead">No more messing up the numbers in your budget and waiting for a conversion to happen.</p>
             <p class="lead">Simple way to add transactions to YNAB with a built in, on the fly currency converter.</p>
@@ -26,20 +28,13 @@
         </form>
 
         <div v-else>
-          <div style="padding-top: 1rem;"> <!-- used to be container -->
-            <h5>Add Transaction</h5>
+          <div> <!-- used to be container -->
+            <h5 id="header">Add Transaction</h5>
             <form id="form" @submit.prevent>
               
             <div class="form-group row">
               <label for="currency" class="col-3 col-sm-2 col-form-label">Currency</label>
               <div class="col-9 col-sm-10">
-<!--                 <select class="custom-select" id="currency" v-model="userCurrency" @change="convert('budget'); saveCurrency()">
-                  <option v-for="(currency, code) in currencies" v-bind:value="code">
-                    {{ currency }}
-                  </option>
-                </select>-->
-<!--                 <v-select :options="currencies" v-model="userCurrency" @change="console.log(this.userCurrency); convert('budget'); saveCurrency()"></v-select> -->
-<!--                 <multiselect v-model="userCurrency2" @change="console.log(this.user)" :options="currencies" :searchable="true" track-by="code" label="label" :close-on-select="false" :show-labels="false" placeholder="Pick a value"></multiselect> -->
                 <model-list-select :list="currencies" v-model="userCurrency" option-value="code" :custom-text="currencySelectLabel" placeholder="Start typing..." class="custom-select"></model-list-select>
               </div>
             </div>
@@ -47,15 +42,15 @@
             <div class="form-group row">
               <label for="amount" class="col-3 col-sm-2 col-form-label">Amount</label>
               <div class="col-9 col-sm-10">
-                <div class="input-group" v-if="userCurrency">
+                <div class="input-group" v-if="userCurrency" id="user-currency-group">
                   <div class="input-group-prepend">
-                    <span class="input-group-text" style="width: 5rem;"><span :class="userFlag"></span>{{ userCurrency }}</span>
+                    <span class="input-group-text currency-prepend"><span :class="userFlag"></span>{{ userCurrency }}</span>
                   </div>
                   <input type="number" min="0.00" step="0.01" class="form-control" v-model="amountUserCurrency" @change="convert('budget');" v-on:keydown.enter.prevent="convert('budget');" >
                 </div>
-                <div class="input-group" style="padding-top: 0.5rem;">
+                <div class="input-group">
                   <div class="input-group-prepend">
-                    <span class="input-group-text" style="width: 5rem;"><span :class="budgetFlag"></span>{{ budgetCurrency }}</span>
+                    <span class="input-group-text currency-prepend"><span :class="budgetFlag"></span>{{ budgetCurrency }}</span>
                   </div>
                   <input type="number" min="0.01" step="0.01" class="form-control" v-model="amountBudgetCurrency" @change="convert('user');" v-on:keydown.enter.prevent="convert('budget');">
                 </div>
@@ -134,7 +129,7 @@
             </div>
               
             <div class="form-group row">
-              <div class="col-form-label col-3 col-sm-2 custom-control custom-switch" style="padding-left: 3rem;">
+              <div class="col-form-label col-3 col-sm-2 custom-control custom-switch" id="cleared-switch">
                 <input type="checkbox" class="custom-control-input" id="cleared" @change="saveCleared()" v-model="cleared" true-value="cleared" false-value="uncleared">
                 <label class="custom-control-label" for="cleared">Cleared</label>
               </div>
@@ -142,7 +137,7 @@
               </div>
             </div>
               
-            <button type="submit" class="btn btn-primary" v-on:click="submitTransaction()" v-if="!loadingSubmit">Submit</button>
+            <button type="submit" class="btn btn-primary" v-on:click="submitTransaction()" v-if="!loadingSubmit" id="submit-button">Submit</button>
             <div class="spinner-border" role="status" v-else>
               <span class="sr-only">Loading...</span>
             </div>
@@ -153,7 +148,7 @@
         </div>
 
       </div>
-      <footer class="pt-4 my-md-5 pt-md-5 border-top">
+      <footer class="pt-4 my-md-5 pt-md-5 border-top" id="footer">
         <div class="row">
           <div class="col-12 col-md">
             <p v-if="ynab.token"><small class="text-muted">
@@ -171,12 +166,7 @@
     </div>
   </div>
 </template>
-<style src="vue-select/dist/vue-select.css"></style>
-<style src="vue-multiselect/dist/vue-multiselect.min.css"></style>
 <style src="vue-search-select/dist/VueSearchSelect.css"></style>
-<style>
-  .form-group {margin-bottom: 0.5rem};
-</style>
 
 <script>
 // Hooray! Here comes YNAB!
@@ -189,19 +179,13 @@ import currencies from './currenciesObj.json';
 // Import Our Components to Compose Our App
 import Nav from './components/Nav.vue';
 import Footer from './components/Footer.vue';
-import Budgets from './components/Budgets.vue';
-import Transactions from './components/Transactions.vue';
-import NewTransaction from './components/NewTransaction.vue';
   
 import Vue from 'vue';
   
 var fx = require("money");
 const axios = require('axios');
   
-import vSelect from 'vue-select'
-Vue.component('v-select', vSelect)
-  import Multiselect from 'vue-multiselect'
-  import { ModelListSelect } from 'vue-search-select'
+import { ModelListSelect } from 'vue-search-select'
   
   
 export default {
@@ -241,27 +225,20 @@ export default {
       date: new Date().toISOString().slice(0,10)
       // @todo / functionality
       // searchable selects on everything else - and fix the icon/or remove the icon for date
-      // make sure disk cache on this (rates) doesn't last more than a day
+      // make sure disk cache on this (rates) doesn't last more than a day: cache control. Currently 365 days. Fix!
       // python cronjob, make sure permissions are ok, set up error logging to file, make sure THAT json is used
-      // global loading with spinner while refreshing token and while setting budget currency. Remove loading from other places to not block the ui.
       
       // @maintenance / making it nice
       // 6 requests go out when changing budget.. Still happens
-      // console errors on first login
-      // pick a theme - with lina
-      // margins/paddings etc
-      // padding when only one currency present
-      // look into reliance on glitch cdn/css files
-      // remove all console logs
+      // console errors on first login / error when no currency selected
       // set to production mode
       // deploy!
-      // ... remove obsolete packages from npm/calls to them (selects etc)
-      // ... move template to a separate file
-      // ... css stuff goes to stylesheet
+      // test in safari and firefox
       
       // @launch
       // google analytics
       // privacy policy
+      // use it yourself for a while to add txs
       // get approved by ynab
       // ask them to add it to list
       // post on ynab forum
@@ -279,20 +256,16 @@ export default {
     }
     fx.base = "USD";
     this.amountUserCurrency = this.amountUserCurrency.toFixed(2);
-    
-//     let newCurrencies = [];
-//     for (let key in this.currencies) {
-//       if (this.currencies.hasOwnProperty(key)) {
-//         newCurrencies.push({label: this.currencies[key], code: key});
-//       }
-//     }
-//     console.log(JSON.stringify(newCurrencies));
   },
   watch: {
     'budgetId': async function (val) {
       if(!this.budgets.length) {
+        this.loading = true;
         this.budgets = await this.getBudgets();
-        if(this.budgets.length) this.cache("budgets", this.budgets);
+        if(this.budgets.length) {
+          this.cache("budgets", this.budgets);
+          this.loading = false;
+        }
       }
       this.setBudgetCurrency(this.budgets);
       
@@ -325,7 +298,6 @@ export default {
       if(!this.account) this.formError = "please select an account";
       else {
         let data = {"transaction": {account_id: this.account, date: this.date, payee_id: this.payee, amount: this.amountBudgetCurrency * this.type * 1000, category_id: this.category, approved: true, memo: this.memo, cleared: this.cleared}};
-        console.log(data);
         this.loadingSubmit = true;
         this.api.transactions.createTransaction(this.budgetId, data).then((res) => {
           this.loadingSubmit = false;
@@ -397,15 +369,12 @@ export default {
       });
     },
     setDefaultBudget() {
-      this.loading = true;
       this.error = null;
       this.api.budgets.getBudgetById("default").then((res) => {
         this.budgetId = res.data.budget.id;
       }).catch((err) => {
         this.error = err.error.detail;
-      }).finally(() => {
-        this.loading = false;
-      });
+      })
     },
     setBudgetCurrency: function(budgets) {
       let currentBudgetId = this.budgetId;
@@ -418,7 +387,6 @@ export default {
     getCategories() {
       let cache = this.getCached("categories-"+this.budgetId);
       if(cache) {this.categories = cache; return true;}
-      this.loading = true;
       this.error = null;
       this.api.categories.getCategories(this.budgetId).then((res) => {
         this.categories = res.data.category_groups;
@@ -431,14 +399,11 @@ export default {
         this.cache("categories-"+this.budgetId, this.categories);
       }).catch((err) => {
         this.error = err.error.detail;
-      }).finally(() => {
-        this.loading = false;
-      });
+      })
     },
     getPayees() {
       let cache = this.getCached("payees-"+this.budgetId);
       if(cache) {this.payees = cache; return true;}
-      this.loading = true;
       this.error = null;
       this.api.payees.getPayees(this.budgetId).then((res) => {
         this.payees = res.data.payees.filter(payee => payee.name != "Reconciliation Balance Adjustment" && payee.name != "Starting Balance" && payee.name != "Manual Balance Adjustment");
@@ -446,23 +411,18 @@ export default {
         this.cache("payees-"+this.budgetId, this.payees);
       }).catch((err) => {
         this.error = err.error.detail;
-      }).finally(() => {
-        this.loading = false;
-      });
+      })
     },
     getAccounts() {
       let cache = this.getCached("accounts-"+this.budgetId);
       if(cache) {this.accounts = cache; return true;}
-      this.loading = true;
       this.error = null;
       this.api.accounts.getAccounts(this.budgetId).then((res) => {
         this.accounts = res.data.accounts;
         this.cache("accounts-"+this.budgetId, this.accounts);
       }).catch((err) => {
         this.error = err.error.detail;
-      }).finally(() => {
-        this.loading = false;
-      });
+      })
     },
     // This builds a URI to get an access token from YNAB
     // https://api.youneedabudget.com/#outh-applications
@@ -479,6 +439,7 @@ export default {
       let params = new URLSearchParams(uri);
       let code = params.get("code");
       if (code && code !== '') {
+        this.loading = true;
         let accessData = await this.getAccessToken(code);
         token = this.setAccessData(accessData);
         // remove code from url
@@ -489,12 +450,14 @@ export default {
         let expires_at = localStorage.getItem('ynab_expires_at');
         if(!expires_at) return null;
         if(new Date().getTime() >= expires_at) { // need to refresh it..
+          this.loading = true;
           let accessData = await this.refreshAccessToken(localStorage.getItem('ynab_refresh_token'));
           token = this.setAccessData(accessData);
         } else { // good to go
           token = localStorage.getItem('ynab_access_token');
         }
       }
+      this.loading = false;
       return token;
     },
     getAccessToken(code) {
@@ -549,10 +512,6 @@ export default {
   components: {
     Nav,
     Footer,
-    Budgets,
-    Transactions,
-    NewTransaction,
-    Multiselect,
     ModelListSelect
   }
 }

@@ -1,18 +1,12 @@
 dependencies:
   axios: 0.19.2
-  axios-cache-adapter: 2.5.0
   chalk: 2.4.2
   cpr: 3.0.1
   css-loader: 3.5.2
-  flag-icon-css: 3.4.6
   money: 0.2.0
   style-loader: 1.1.4
-  vue-country-flag: 2.0.0
-  vue-flag-icon: 1.0.6
-  vue-multiselect: 2.1.6
   vue-search-select: 2.9.3
   vue-select: 3.10.0
-  vue-select2: 0.2.6
 devDependencies:
   npm-check-updates: 3.2.2
   vue: 2.6.10
@@ -437,15 +431,6 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-Wm6ukoaOGJi/73p/cl2GvLjTI5JM1k/O14isD73YML8StrH/7/lRFgmg8nICZgD3bZZvjwCGxtMOD3wWNAu8cg==
-  /axios-cache-adapter/2.5.0:
-    dependencies:
-      cache-control-esm: 1.0.0
-      lodash: 4.17.15
-    dev: false
-    peerDependencies:
-      axios: 0.18.1
-    resolution:
-      integrity: sha512-YcMPdMoqmSLoZx7A5YD/PdYGuX6/Y9M2tHBhaIXvXrPeGgNnbW7nb3+uArWlT53WGHLfclnu2voMmS7jGXVg6A==
   /axios/0.19.2:
     dependencies:
       follow-redirects: 1.5.10
@@ -700,10 +685,6 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha512-AKcdTnFSWATd5/GCPRxr2ChwIJ85CeyrEyjRHlKxQ56d4XJMGym0uAiKn0xbLOGOl3+yRpOTi484dVCEc5AUzQ==
-  /cache-control-esm/1.0.0:
-    dev: false
-    resolution:
-      integrity: sha512-Fa3UV4+eIk4EOih8FTV6EEsVKO0W5XWtNs6FC3InTfVz+EjurjPfDXY5wZDo/lxjDxg5RjNcurLyxEJBcEUx9g==
   /cacheable-request/6.1.0:
     dependencies:
       clone-response: 1.0.2
@@ -1722,14 +1703,6 @@ packages:
       node: '>= 0.10'
     resolution:
       integrity: sha512-YbffarhcicEhOrm4CtrwdKBdCuz576RLdhJDsIfvNtxUuhdRet1qZcsMjqbePtAseKdAnDyM/IyXbu7PRPRLYg==
-  /flag-icon-css/2.9.0:
-    dev: false
-    resolution:
-      integrity: sha512-SeHvGEB43XFPZiJz6lFFRGHfp+Db+s1qGiClW70cZauQVbPM42wImlNUEuXSXs94kPchz7xvoxP0QK1y6FxLfg==
-  /flag-icon-css/3.4.6:
-    dev: false
-    resolution:
-      integrity: sha512-rF69rt19Hr63SRQTiPBzQABaYB20LAgZhDkr/AxqSdgmCIN+tC5PRMz56Y0gxehFXJmdRwv55+GMi7R1fCRTwg==
   /flush-write-stream/1.1.1:
     dependencies:
       inherits: 2.0.4
@@ -2794,6 +2767,7 @@ packages:
     resolution:
       integrity: sha1-0CJTc662Uq3BvILklFM5qEJ1R3M=
   /lodash/4.17.15:
+    dev: true
     resolution:
       integrity: sha512-8xOcRHvCjnocdS5cpwXQXVzmmh5e5+saE2QGoeQmbKmRS6J3VQppPOIt0MnmE+4xlZoumy0GPG0D0MVIQbNA1A==
   /loglevel/1.6.8:
@@ -5061,16 +5035,6 @@ packages:
     dev: true
     resolution:
       integrity: sha512-2ham8XPWTONajOR0ohOKOHXkm3+gaBmGut3SRuu75xLd/RRaY6vqgh8NBYYk7+RW3u5AtzPQZG8F10LHkl0lAQ==
-  /vue-country-flag/2.0.0:
-    dev: false
-    resolution:
-      integrity: sha512-yC4IscQd7iQLTQdMy0pmk/WuyI2Tc9CDyWEQQQH1XO7kAgPz2/pAuJNjht6hPpX9dpjSJ0fGKqMgsM6twQJpGw==
-  /vue-flag-icon/1.0.6:
-    dependencies:
-      flag-icon-css: 2.9.0
-    dev: false
-    resolution:
-      integrity: sha1-AwT9/uvZgqa/mFxjPDRv88bS+dc=
   /vue-hot-reload-api/2.3.4:
     dev: true
     resolution:
@@ -5088,13 +5052,6 @@ packages:
       webpack: ^3.0.0 || ^4.1.0 || ^5.0.0-0
     resolution:
       integrity: sha512-IaPU2KOPjs/QjMlxFs/TiTtQUSbftQ7lsAvoxe21rtcQohsMhx+1AltXCNhZIpIn46PtODiAgz+o8RbMpKtmJw==
-  /vue-multiselect/2.1.6:
-    dev: false
-    engines:
-      node: '>= 4.0.0'
-      npm: '>= 3.0.0'
-    resolution:
-      integrity: sha512-s7jmZPlm9FeueJg1RwJtnE9KNPtME/7C8uRWSfp9/yEN4M8XcS/d+bddoyVwVnvFyRh9msFo0HWeW0vTL8Qv+w==
   /vue-search-select/2.9.3:
     dev: false
     resolution:
@@ -5105,12 +5062,6 @@ packages:
       vue: 2.x
     resolution:
       integrity: sha512-ueR1p5zoIyEO6KBoaxUnsMphlO7TREPPezWP9UJH+AXYAbQoEq1p0HztWhMpVqFhOQq6J5iUosKZT+nfSQHacQ==
-  /vue-select2/0.2.6:
-    dev: false
-    engines:
-      node: '>=0.10.0'
-    resolution:
-      integrity: sha1-09u/9lbXq3VbOs7kinJe/R/Q/Bs=
   /vue-server-renderer/2.6.10:
     dependencies:
       chalk: 1.1.3
@@ -5459,22 +5410,16 @@ shrinkwrapMinorVersion: 9
 shrinkwrapVersion: 3
 specifiers:
   axios: ^0.19.2
-  axios-cache-adapter: ^2.5.0
   chalk: ^2.4.2
   cpr: ^3.0.1
   css-loader: ^3.5.2
-  flag-icon-css: ^3.4.6
   money: ^0.2.0
   npm-check-updates: ^3.1.17
   style-loader: ^1.1.2
   vue: 2.6.10
-  vue-country-flag: ^2.0.0
-  vue-flag-icon: ^1.0.6
   vue-loader: ^15.7.0
-  vue-multiselect: ^2.1.5
   vue-search-select: ^2.9.1
   vue-select: ^3.10.0
-  vue-select2: ^0.2.6
   vue-server-renderer: 2.6.10
   vue-template-compiler: 2.6.10
   webpack: ^4.35.3

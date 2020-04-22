@@ -13,17 +13,11 @@
     "chalk": "^2.4.2",
     "cpr": "^3.0.1",
     "vue-select": "^3.10.0",
-    "flag-icon-css": "^3.4.6",
-    "vue-flag-icon": "^1.0.6",
-    "vue-country-flag": "^2.0.0",
-    "vue-select2": "^0.2.6",
     "vue-search-select": "^2.9.1",
-    "vue-multiselect": "^2.1.5",
     "css-loader": "^3.5.2",
     "style-loader": "^1.1.2",
     "money": "^0.2.0",
-    "axios": "^0.19.2",
-    "axios-cache-adapter": "^2.5.0"
+    "axios": "^0.19.2"
   },
   "devDependencies": {
     "css-loader": "^3.0.0",

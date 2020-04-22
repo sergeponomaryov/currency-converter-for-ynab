@@ -1,0 +1,33 @@
+.form-group {
+  margin-bottom: 0.5rem
+}
+
+#header {
+  padding-top: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.currency-prepend {
+  width: 5rem;
+}
+
+#user-currency-group {
+  padding-bottom: 0.5rem;
+}
+
+#cleared-switch {
+  padding-left: 3rem;
+}
+
+#submit-button {
+  margin-top: 1rem;
+}
+
+#footer {
+  padding-top: 1.5rem !important;
+  margin-top: 2rem !important;
+}
+
+footer p {
+  margin-bottom: 0.5rem;
+}
