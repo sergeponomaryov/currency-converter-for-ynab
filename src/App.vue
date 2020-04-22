@@ -60,64 +60,42 @@
             <div class="form-group row">
               <label for="budget" class="col-3 col-sm-2 col-form-label">Type</label>
               <div class="col-9 col-sm-10">
-                <select class="custom-select" id="type" v-model="type" >
-                  <option v-for="(name, value) in types" v-bind:value="value">
-                    {{ name }}
-                  </option>
-                </select>
+                <model-list-select :list="types" v-model="type" option-value="id" option-text="name" class="custom-select"></model-list-select>
               </div>
             </div>
               
             <div class="form-group row">
               <label for="budget" class="col-3 col-sm-2 col-form-label">Budget</label>
               <div class="col-9 col-sm-10">
-                <select class="custom-select" id="budget" v-model="budgetId" @change="getCategories(); getPayees(); getAccounts(); saveBudget()" >
-                  <option v-for="budget in budgets" v-bind:value="budget.id">
-                    {{ budget.name }}
-                  </option>
-                </select>
+                <model-list-select :list="budgets" v-model="budgetId" option-value="id" option-text="name" class="custom-select" @change="getCategories(); getPayees(); getAccounts(); saveBudget()"></model-list-select>
               </div>
             </div>
               
             <div class="form-group row">
               <label for="payee" class="col-3 col-sm-2 col-form-label">Payee</label>
               <div class="col-9 col-sm-10">
-                <select class="custom-select" id="payee" v-model="payee">
-                  <option v-for="payee in payees" v-bind:value="payee.id">
-                    {{ payee.name }}
-                  </option>
-                </select>
+                <model-list-select :list="payees" v-model="payee" option-value="id" option-text="name" class="custom-select"></model-list-select>
               </div>
             </div>
               
             <div class="form-group row">
               <label for="category" class="col-3 col-sm-2 col-form-label">Category</label>
               <div class="col-9 col-sm-10">
-                <select class="custom-select" id="category" v-model="category">
-                  <optgroup v-for="group in categories" :label="group.name">
-                    <option v-for="category in group.categories" v-bind:value="category.id">
-                      {{ category.name }}
-                    </option>
-                  </optgroup>
-                </select>
+                <model-list-select :list="categories" v-model="category" option-value="id" option-text="name" class="custom-select"></model-list-select>
               </div>
             </div>
               
             <div class="form-group row">
               <label for="account" class="col-3 col-sm-2 col-form-label">Account</label>
               <div class="col-9 col-sm-10">
-                <select class="custom-select" id="account" v-model="account" @change="saveAccount()">
-                  <option v-for="account in accounts" v-bind:value="account.id">
-                    {{ account.name }}
-                  </option>
-                </select>
+                <model-list-select :list="accounts" v-model="account" option-value="id" option-text="name" class="custom-select" @change="saveAccount()"></model-list-select>
               </div>
             </div>
               
             <div class="form-group row">
               <label for="category" class="col-3 col-sm-2 col-form-label">Date</label>
               <div class="col-9 col-sm-10">
-                <input type="date" class="custom-select" id="date" v-model="date" v-on:keydown.enter.prevent>
+                <input type="date" class="form-control" id="date" v-model="date" v-on:keydown.enter.prevent>
               </div>
             </div>
               
@@ -137,12 +115,14 @@
               </div>
             </div>
               
-            <button type="submit" class="btn btn-primary" v-on:click="submitTransaction()" v-if="!loadingSubmit" id="submit-button">Submit</button>
-            <div class="spinner-border" role="status" v-else>
-              <span class="sr-only">Loading...</span>
+            <div id="submit-area">
+              <button type="submit" class="btn btn-primary" v-on:click="submitTransaction()" v-if="!loadingSubmit">Submit</button>
+              <div class="spinner-border" role="status" v-else>
+                <span class="sr-only">Loading...</span>
+              </div>
+              <span class="text-success" v-if="addedSuccessfully">&nbsp;added successfully!</span>
+              <span class="text-danger" v-if="formError">&nbsp;{{ formError }}</span>
             </div>
-            <span class="text-success" v-if="addedSuccessfully">&nbsp;added successfully!</span>
-            <span class="text-danger" v-if="formError">&nbsp;{{ formError }}</span>
           </form>
           </div>
         </div>
@@ -209,7 +189,7 @@ export default {
       accounts: [],
       categories: [],
       currencies: currencies,
-      types: {'-1': 'Expense', '1': 'Income'},
+      types: [{id: -1, name: 'Expense'}, {id: 1, name: 'Income'}],
       // data in add transaction form
       type: -1,
       budgetId: null,
@@ -223,21 +203,22 @@ export default {
       userCurrency: localStorage.getItem('currency'),
       budgetCurrency: null,
       date: new Date().toISOString().slice(0,10)
-      // @todo / functionality
-      // searchable selects on everything else - and fix the icon/or remove the icon for date
-      // make sure disk cache on this (rates) doesn't last more than a day: cache control. Currently 365 days. Fix!
-      // python cronjob, make sure permissions are ok, set up error logging to file, make sure THAT json is used
       
-      // @maintenance / making it nice
+      // @todo
+      // update conversion upon typing
+      // account/budget not set to correct value with new select
       // 6 requests go out when changing budget.. Still happens
       // console errors on first login / error when no currency selected
-      // set to production mode
-      // deploy!
       // test in safari and firefox
+      // google analytics
+      // privacy policy (show inline?), fx risk warning, contact
+      // python cronjob, make sure permissions are ok, set up error logging to file, make sure THAT json is used
+      // make sure disk cache on this (rates) doesn't last more than a day: cache control. Currently 365 days. Fix! (Altho put it on a domain first and check what its like from there, this is a cdn!!!)
       
       // @launch
-      // google analytics
-      // privacy policy
+      // set to production mode
+      // deploy! (front to netlify, back to aws)
+      // get domain
       // use it yourself for a while to add txs
       // get approved by ynab
       // ask them to add it to list
@@ -294,8 +275,9 @@ export default {
   methods: {
     submitTransaction: function() {
       this.formError = null;
+      this.addedSuccessfully = false;
       if(this.amountBudgetCurrency < 0.01) this.formError = "please enter an amount";
-      if(!this.account) this.formError = "please select an account";
+      else if(!this.account) this.formError = "please select an account";
       else {
         let data = {"transaction": {account_id: this.account, date: this.date, payee_id: this.payee, amount: this.amountBudgetCurrency * this.type * 1000, category_id: this.category, approved: true, memo: this.memo, cleared: this.cleared}};
         this.loadingSubmit = true;
@@ -389,14 +371,22 @@ export default {
       if(cache) {this.categories = cache; return true;}
       this.error = null;
       this.api.categories.getCategories(this.budgetId).then((res) => {
-        this.categories = res.data.category_groups;
+        let categories = [];
+        let groups = res.data.category_groups;
         // clear them out from trash
-        this.categories.forEach(function(group) {
+        groups.forEach(function(group) {
           if(group.name == "Internal Master Category") group.name = "Inflows";
           group.categories = group.categories.filter(category => category.hidden == false && category.name != "Deferred Income SubCategory" && category.name != "Uncategorized");
         });
-        this.categories = this.categories.filter(group => group.name != "Hidden Categories" && group.name != "Credit Card Payments" && group.hidden == false);
+        groups = groups.filter(group => group.name != "Hidden Categories" && group.name != "Credit Card Payments" && group.hidden == false);
+        groups.forEach(function(group) {
+          group.categories.forEach(function(category) {
+            categories.push({id: category.id, name: group.name + ": " + category.name});
+          });
+        });
+        this.categories = categories;
         this.cache("categories-"+this.budgetId, this.categories);
+        console.log(JSON.stringify(this.categories));
       }).catch((err) => {
         this.error = err.error.detail;
       })
@@ -407,7 +397,7 @@ export default {
       this.error = null;
       this.api.payees.getPayees(this.budgetId).then((res) => {
         this.payees = res.data.payees.filter(payee => payee.name != "Reconciliation Balance Adjustment" && payee.name != "Starting Balance" && payee.name != "Manual Balance Adjustment");
-        this.payees.unshift({id: null, name: ""});
+        //this.payees.unshift({id: null, name: ""});
         this.cache("payees-"+this.budgetId, this.payees);
       }).catch((err) => {
         this.error = err.error.detail;
