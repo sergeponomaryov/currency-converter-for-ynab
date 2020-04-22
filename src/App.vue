@@ -20,10 +20,15 @@
         
         <!-- If we dont have a token ask the user to authorize with YNAB -->
         <form v-else-if="!ynab.token">
-          <div class="form-group">
-            <p class="lead">No more messing up the numbers in your budget and waiting for a conversion to happen.</p>
-            <p class="lead">Simple way to add transactions to YNAB with a built in, on the fly currency converter.</p>
-            <button @click="authorizeWithYNAB" class="btn btn-primary">Connect With YNAB &gt;</button>
+          <div class="form-group" id="intro">
+            <h5>How to use it:</h5>
+            <p>Say you are from the US, traveling in Europe and paying with your dollar based card. You got a bill for €10 and want to record it to YNAB. Simply enter €10, this app will show you the amount in USD, then pick a category, etc. like you would in the regular app, submit, and that's it! You will know right away how many dollars you just spent, and your transaction is recorded to YNAB. Without googling "10 euros in dollars".</p>
+            <p>Of course, no one can predict what rate your bank will charge you, but this is as close as it gets. Once a month, you can adjust your balances manually to account for rate movements.</p>
+            <h5>Why it's different from others:</h5>
+            <p>
+              Other apps would require you to create a new account in YNAB for your euros and record €10 to it. But YNAB would show that as $10, until it would get converted to the actual dollar amount after some time. Meanwhile, your YNAB would show wrong numbers. Euros are not that different, but what if you used Japanese yen, at a rate of 100 yen to 1 dollar? And imagine adding new accounts for every single currency you want to use! That's confusing and a bad user experience.
+            </p>
+            <button @click="authorizeWithYNAB" class="btn btn-success btn-lg">Connect With YNAB &gt;</button>
           </div>
         </form>
 
@@ -135,8 +140,11 @@
               <a href="#" @click="resetToken">Log out</a>
             </small></p>
             <p><small class="text-muted">
-              <a href="#">Privacy Policy</a>
+              <a href="#privacy-policy" v-on:click="showPrivacy = !showPrivacy">Privacy Policy</a>
             </small></p>
+            <p id="privacy-policy" v-if="showPrivacy">
+              We don't store any data from your YNAB account. It is stored in your browser. Our API only obtains and refreshes access tokens for YNAB API, which is necessary to avoid being logged out every 2 hours. We do not store the tokens that we process. Data is not shared with third parties.
+            </p>
             <p><small class="text-muted">
               <a target="_blank" href="https://icons8.com/icons/set/currency-exchange">Currency Exchange</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
             </small></p>
@@ -174,7 +182,7 @@ export default {
     return {
       ynab: {
         clientId: config.clientId,
-        redirectUri: config.redirectUri,
+        redirectUri: process.env.REDIRECT_URL,
         token: null,
         api: null,
       },
@@ -183,6 +191,7 @@ export default {
       error: null,
       addedSuccessfully: false,
       formError: false,
+      showPrivacy: false,
       // data loaded from YNAB or elsewhere
       budgets: [],
       payees: [],
@@ -205,21 +214,25 @@ export default {
       date: new Date().toISOString().slice(0,10)
       
       // @todo
-      // google analytics
-      // privacy policy (show inline?), fx risk warning, contact
-      // python cronjob, make sure permissions are ok, set up error logging to file, make sure THAT json is used
-      // make sure disk cache on this (rates) doesn't last more than a day: cache control. Currently 365 days. Fix! (Altho put it on a domain first and check what its like from there, this is a cdn!!!)
+      // env vars not working. If no better ideas heres a kinda indian way: keep the netlify one in config, in app check location if glitch then use it.
+      // disable cors on api, or only allow glitch :)
+      // test if api works with the other redirect url. If doesn't... make it post the redirect url.
       // code reset doesnt work in ff.. also input highlighted in red
       // usd gets 0'd when user currency is first selected
+      // google analytics
+      // contact email
+      // make sure disk cache on rates doesn't last more than a day: cache control. Currently 365 days. Fix! (Altho put it on a domain first and check what its like from there, this is a cdn!!!)
+      // test transfers between accounts
+      // some veery basic seo just meta etc
+      // on logout token should be completely removed from storage
       
       // @launch
-      // deploy! (front to netlify, back to aws. Redirect url? Netlify i believe.)
-      // get domain
       // use it yourself for a while to add txs
       // get approved by ynab
       // ask them to add it to list
       // post on ynab forum
       // post on reddit
+      // Also add your app to all posts and stuff that list ways to currency convert.
     }
   },
   // When this component is created, check whether we need to get a token,
@@ -234,6 +247,7 @@ export default {
     fx.base = "USD";
     this.amountUserCurrency = this.amountUserCurrency.toFixed(2);
     this.amountBudgetCurrency = this.amountBudgetCurrency.toFixed(2);
+    console.log(process.env.VUE_APP_REDIRECT_URL);
   },
   watch: {
     'budgetId': async function (val) {

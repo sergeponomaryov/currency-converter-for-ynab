@@ -1,6 +1,5 @@
 {
   "clientId": "12b474b739c0be9860d6f20c883e702e10fc17a9cf2423e556e3b84f8ab8f010",
-  "redirectUri": "https://currency-converter-for-ynab.glitch.me/",
-  "ratesUrl": "https://cdn.glitch.com/5cccd53f-eacb-4b99-80a9-207590d27184%2Frates.json?v=1587241940440",
-  "apiUrl": "https://ynab-oauth-api.glitch.me/"
+  "ratesUrl": "https://cc-backend.lisik.dev/rates.json",
+  "apiUrl": "https://cc-backend.lisik.dev/"
 }

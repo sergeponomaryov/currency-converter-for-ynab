@@ -31,3 +31,15 @@
 footer p {
   margin-bottom: 0.5rem;
 }
+
+#intro h5 {
+  margin-top: 2rem;
+}
+
+#intro button {
+  margin-top: 1rem;
+}
+
+#privacy-policy {
+  font-style: italic;
+}
