@@ -26,7 +26,7 @@
             <p>Of course, no one can predict what rate your bank will charge you, but this is as close as it gets. Once a month, you can adjust your balances manually to account for rate movements.</p>
             <h5>Why it's different from others:</h5>
             <p>
-              Other apps would require you to create a new account in YNAB for your euros and record €10 to it. But YNAB would show that as $10, until it would get converted to the actual dollar amount after some time. Meanwhile, your YNAB would show wrong numbers. Euros are not that different, but what if you used Japanese yen, at a rate of 100 yen to 1 dollar? And imagine adding new accounts for every single currency you want to use! That's confusing and a bad user experience.
+              Other apps would require you to create a new account in YNAB for your euros and record €10 to it. But YNAB would show that as $10, until it would get converted to the actual dollar amount after some time. Meanwhile, your YNAB would show wrong numbers. Euros are not that different, but what if you used Japanese yen, at a rate of 100 yen to 1 dollar? And imagine adding new accounts for every single currency you want to use! That's confusing and inconvenient.
             </p>
             <button @click="authorizeWithYNAB" class="btn btn-success btn-lg">Connect With YNAB &gt;</button>
           </div>
@@ -182,7 +182,7 @@ export default {
     return {
       ynab: {
         clientId: config.clientId,
-        redirectUri: process.env.REDIRECT_URL,
+        redirectUri: (window.location.href.search("glitch.me")) ? "https://currency-converter-for-ynab.glitch.me/" : config.redirectUrl,
         token: null,
         api: null,
       },
@@ -214,17 +214,16 @@ export default {
       date: new Date().toISOString().slice(0,10)
       
       // @todo
-      // env vars not working. If no better ideas heres a kinda indian way: keep the netlify one in config, in app check location if glitch then use it.
-      // disable cors on api, or only allow glitch :)
       // test if api works with the other redirect url. If doesn't... make it post the redirect url.
       // code reset doesnt work in ff.. also input highlighted in red
       // usd gets 0'd when user currency is first selected
       // google analytics
-      // contact email
+      // contact email. Zoho for now i think will work best.
       // make sure disk cache on rates doesn't last more than a day: cache control. Currently 365 days. Fix! (Altho put it on a domain first and check what its like from there, this is a cdn!!!)
       // test transfers between accounts
-      // some veery basic seo just meta etc
+      // seo: Google Search Console. optimise your meta description to have a clickable useful SERP snippet. Other meta stuff. Thats it.
       // on logout token should be completely removed from storage
+      // disable cors on api, or only allow glitch :)
       
       // @launch
       // use it yourself for a while to add txs
@@ -242,12 +241,11 @@ export default {
     if (this.ynab.token) {
       this.api = new ynab.api(this.ynab.token);
       this.budgetId = localStorage.getItem('budget') || this.setDefaultBudget();
-      //this.getRates(); called from convert
     }
     fx.base = "USD";
     this.amountUserCurrency = this.amountUserCurrency.toFixed(2);
     this.amountBudgetCurrency = this.amountBudgetCurrency.toFixed(2);
-    console.log(process.env.VUE_APP_REDIRECT_URL);
+    console.log(this.ynab.redirectUri);
   },
   watch: {
     'budgetId': async function (val) {
@@ -450,8 +448,12 @@ export default {
       let code = params.get("code");
       if (code && code !== '') {
         this.loading = true;
-        let accessData = await this.getAccessToken(code);
-        token = this.setAccessData(accessData);
+        try {
+          let accessData = await this.getAccessToken(code, this.ynab.redirectUri);
+          token = this.setAccessData(accessData);
+        } catch(err) {
+          this.error = err;
+        }
         // remove code from url
         window.history.replaceState({}, document.title, "/");
       } else {
@@ -461,8 +463,12 @@ export default {
         if(!expires_at) return null;
         if(new Date().getTime() >= expires_at) { // need to refresh it..
           this.loading = true;
-          let accessData = await this.refreshAccessToken(localStorage.getItem('ynab_refresh_token'));
-          token = this.setAccessData(accessData);
+          try {
+            let accessData = await this.refreshAccessToken(localStorage.getItem('ynab_refresh_token'));
+            token = this.setAccessData(accessData);
+          } catch(err) {
+            this.error = err;
+          }
         } else { // good to go
           token = localStorage.getItem('ynab_access_token');
         }
@@ -470,13 +476,13 @@ export default {
       this.loading = false;
       return token;
     },
-    getAccessToken(code) {
+    getAccessToken(code, redirectUrl) {
       return new Promise(function (resolve, reject) {
-        axios.post(config.apiUrl + "token", {"code": code})
+        axios.post(config.apiUrl + "token", {"code": code, "redirect_url": redirectUrl})
         .then(response => {
           resolve(response.data);
         }).catch(err => {
-          reject(err);
+          reject(err.response.data.message);
         })
       });
     },
@@ -486,7 +492,7 @@ export default {
         .then(response => {
           resolve(response.data);
         }).catch(err => {
-          reject(err);
+          reject(err.response.data.message);
         })
       });
     },
