@@ -247,7 +247,6 @@ export default {
     fx.base = "USD";
     this.amountUserCurrency = this.amountUserCurrency.toFixed(2);
     this.amountBudgetCurrency = this.amountBudgetCurrency.toFixed(2);
-    console.log(this.ynab.redirectUri);
   },
   watch: {
     'budgetId': async function (val) {
@@ -406,7 +405,6 @@ export default {
         });
         this.categories = categories;
         this.cache("categories-"+this.budgetId, this.categories);
-        //console.log(JSON.stringify(this.categories));
       }).catch((err) => {
         this.error = err.error.detail;
       })
