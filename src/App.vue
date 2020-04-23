@@ -182,7 +182,7 @@ export default {
     return {
       ynab: {
         clientId: config.clientId,
-        redirectUri: (window.location.href.search("glitch.me")) ? "https://currency-converter-for-ynab.glitch.me/" : config.redirectUrl,
+        redirectUri: (window.location.href.search("glitch.me") == -1) ? config.redirectUrl : "https://currency-converter-for-ynab.glitch.me/",
         token: null,
         api: null,
       },
