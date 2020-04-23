@@ -214,20 +214,22 @@ export default {
       date: new Date().toISOString().slice(0,10)
       
       // @todo
-      // test if api works with the other redirect url. If doesn't... make it post the redirect url.
       // code reset doesnt work in ff.. also input highlighted in red
       // usd gets 0'd when user currency is first selected
-      // google analytics
       // contact email. Zoho for now i think will work best.
-      // make sure disk cache on rates doesn't last more than a day: cache control. Currently 365 days. Fix! (Altho put it on a domain first and check what its like from there, this is a cdn!!!)
-      // test transfers between accounts
-      // seo: Google Search Console. optimise your meta description to have a clickable useful SERP snippet. Other meta stuff. Thats it.
-      // on logout token should be completely removed from storage
-      // disable cors on api, or only allow glitch :)
+      // seo: optimise your meta description to have a clickable useful SERP snippet. Other meta stuff. Thats it.
+      
+      // @maintenance
+      // cors whitelist on both json and api
+      // check if rates do get reloaded without cache after 24h (check by content in network)
+      // test analytics after deploy
+      // Cannot read property 'iso_code' of undefined when empty budget
+      // probably for later, if requested: type-in payees. Not even sure how to do that with this shitty ass select. Either option that will turn it into a text input, or fork the select to do it like in web ynab.
       
       // @launch
-      // use it yourself for a while to add txs
+      // use it yourself for a while to add txs and ask lina too, for feedback. Do it, many quirks and lots of india tbh. Make sure it works. Wait a bit. Dont screw up.
       // get approved by ynab
+      // Google Search Console
       // ask them to add it to list
       // post on ynab forum
       // post on reddit
@@ -505,6 +507,9 @@ export default {
     // Clear the token and start authorization over
     resetToken() {
       localStorage.removeItem('ynab_access_token');
+      localStorage.removeItem('ynab_refresh_token');
+      localStorage.removeItem('ynab_expires_at');
+      sessionStorage.clear();
       this.ynab.token = null;
       this.error = null;
     },
