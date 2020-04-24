@@ -214,28 +214,6 @@ export default {
       userCurrency: localStorage.getItem('currency'),
       budgetCurrency: null,
       date: new Date().toISOString().slice(0,10)
-      
-      // @todo
-      // rates didnt get updated last time. Command runs ok tho. Check again on Sat. If still bad, problem with crontab.
-      // send it off to ynab asap, maybe they dont like it, then not worth working on it. Run a few quick tests all over and should be good. GET FEEDBACK FROM LISYA ALSO. You can get tunnel vision easily.
-      
-      // @maintenance
-      // cors whitelist on both json and api
-      // check if rates do get reloaded without cache after 24h (check by content in network)
-      // test analytics after deploy
-      // Cannot read property 'iso_code' of undefined when empty budget
-      // transfer to same payee shouldnt be an option
-      // probably for later, if requested: type-in payees. Not even sure how to do that with this shitty ass select. Either option that will turn it into a text input, or fork the select to do it like in web ynab.
-      // add inline calculator: ok thats not so simple. Do it later.
-      
-      // @launch
-      // use it yourself for a while to add txs and ask lina too, for feedback. Do it, many quirks and lots of india tbh. Make sure it works. Wait a bit. Dont screw up.
-      // get approved by ynab
-      // Google Search Console
-      // ask them to add it to list
-      // post on ynab forum
-      // post on reddit
-      // Also add your app to all posts and stuff that list ways to currency convert.
     }
   },
   // When this component is created, check whether we need to get a token,
