@@ -47,17 +47,17 @@
             <div class="form-group row">
               <label for="amount" class="col-3 col-sm-2 col-form-label">Amount</label>
               <div class="col-9 col-sm-10">
-                <div class="input-group" v-if="userCurrency" id="user-currency-group">
+                <div class="input-group" v-if="userCurrency && budgetCurrency != userCurrency" id="user-currency-group">
                   <div class="input-group-prepend">
                     <span class="input-group-text currency-prepend"><span :class="userFlag"></span>{{ userCurrency }}</span>
                   </div>
-                  <input type="number" min="0.00" step="0.01" class="form-control" v-model="amountUserCurrency" @input="convert('budget');" v-on:keydown.enter.prevent="convert('budget');" >
+                  <input type="number" step="0.01" class="form-control" v-model="amountUserCurrency" @input="convert('budget');" v-on:keydown.enter.prevent="convert('budget');" >
                 </div>
                 <div class="input-group">
                   <div class="input-group-prepend">
                     <span class="input-group-text currency-prepend"><span :class="budgetFlag"></span>{{ budgetCurrency }}</span>
                   </div>
-                  <input type="number" min="0.01" step="0.01" class="form-control" v-model="amountBudgetCurrency" @input="convert('user');" v-on:keydown.enter.prevent="convert('budget');">
+                  <input type="number" step="0.01" class="form-control" v-model="amountBudgetCurrency" @input="convert('user');" v-on:keydown.enter.prevent="convert('budget');">
                 </div>
               </div>
             </div>
@@ -146,6 +146,8 @@
               We don't store any data from your YNAB account. It is stored in your browser. Our API only obtains and refreshes access tokens for YNAB API, which is necessary to avoid being logged out every 2 hours. We do not store the tokens that we process. Data is not shared with third parties.
             </p>
             <p><small class="text-muted">
+              <a href="mailto:me@lisik.dev">Contact</a></small></p>
+            <p><small class="text-muted">
               <a target="_blank" href="https://icons8.com/icons/set/currency-exchange">Currency Exchange</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
             </small></p>
           </div>
@@ -214,17 +216,17 @@ export default {
       date: new Date().toISOString().slice(0,10)
       
       // @todo
-      // code reset doesnt work in ff.. also input highlighted in red
-      // usd gets 0'd when user currency is first selected
-      // contact email. Zoho for now i think will work best.
-      // seo: optimise your meta description to have a clickable useful SERP snippet. Other meta stuff. Thats it.
+      // rates didnt get updated last time. Command runs ok tho. Check again on Sat. If still bad, problem with crontab.
+      // send it off to ynab asap, maybe they dont like it, then not worth working on it. Run a few quick tests all over and should be good. GET FEEDBACK FROM LISYA ALSO. You can get tunnel vision easily.
       
       // @maintenance
       // cors whitelist on both json and api
       // check if rates do get reloaded without cache after 24h (check by content in network)
       // test analytics after deploy
       // Cannot read property 'iso_code' of undefined when empty budget
+      // transfer to same payee shouldnt be an option
       // probably for later, if requested: type-in payees. Not even sure how to do that with this shitty ass select. Either option that will turn it into a text input, or fork the select to do it like in web ynab.
+      // add inline calculator: ok thats not so simple. Do it later.
       
       // @launch
       // use it yourself for a while to add txs and ask lina too, for feedback. Do it, many quirks and lots of india tbh. Make sure it works. Wait a bit. Dont screw up.
@@ -296,6 +298,7 @@ export default {
       this.addedSuccessfully = false;
       if(this.amountBudgetCurrency < 0.01) this.formError = "please enter an amount";
       else if(!this.account) this.formError = "please select an account";
+      else if(!this.budgetId) this.formError = "please select a budget";
       else {
         let data = {"transaction": {account_id: this.account, date: this.date, payee_id: this.payee, amount: this.amountBudgetCurrency * this.type * 1000, category_id: this.category, approved: true, memo: this.memo, cleared: this.cleared}};
         this.loadingSubmit = true;
